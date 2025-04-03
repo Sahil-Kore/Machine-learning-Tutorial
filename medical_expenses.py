@@ -162,3 +162,70 @@ predictons=model.predict(inputs)
 loss=rmse(targets,predictions)
 loss
 
+sns.barplot(data=medical_df,x="region",y="charges")
+
+from sklearn.preprocessing import OneHotEncoder
+
+enc=OneHotEncoder()
+enc.fit(medical_df[["region"]])
+enc.categories_
+
+one_hot=enc.transform(medical_df[["region"]]).toarray()
+one_hot
+
+medical_df[['northeast', 'northwest', 'southeast', 'southwest']]=one_hot
+medical_df
+
+input_cols=["age","bmi","children",'smoker_code','sex_code','northeast','northwest','southeast','southwest']
+inputs,targets=medical_df[input_cols],medical_df["charges"]
+model=LinearRegression().fit(inputs,targets)
+predictions=model.predict(inputs)
+loss=rmse(targets,predictions)
+print(loss)
+
+#Is it better to have two linear regression models for smokers and non smokers
+
+
+weights_df=pd.DataFrame({
+    "feature":np.append(input_cols,1),
+    "weight":np.append(model.coef_,model.intercept_)
+}
+)
+weights_df
+
+#The weights cannot be understood correctly for numerical columns because some columns may have more number of possible values so they can have a larger impact even though their weights are small
+
+#To clearly understand the meaning of weight we have to standarize the data
+
+#THis willnotmake the model more accurate
+
+#z=(x-mew)/sigma
+
+from sklearn.preprocessing import StandardScaler
+numeric_cols=["age","bmi",'children']
+scaler=StandardScaler()
+scaler.fit(medical_df[numeric_cols])
+scaler.mean_
+scaler.var_
+
+scaled_inputs=scaler.transform(medical_df[numeric_cols])
+scaled_inputs
+
+cat_cols=['smoker_code','sex_code','northeast','northwest','southeast','southwest']
+categorical_data=medical_df[cat_cols].values
+
+inputs=np.concatenate((scaled_inputs,categorical_data),axis=1)
+targets=medical_df.charges
+model=LinearRegression().fit(inputs,targets)
+
+predictions=model.predict(inputs)
+loss=rmse(targets,predictions)
+loss
+
+
+weights_df=pd.DataFrame({
+    "feature":np.append(input_cols,1),
+    "weight":np.append(model.coef_,model.intercept_)
+}
+)
+weights_df
