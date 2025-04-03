@@ -3,8 +3,7 @@
 # import kaggle
 # kaggle.api.authenticate()
 # kaggle.api.dataset_download_files("mirichoi0218/insurance",unzip=True,path=r"./csv files")
-
-
+import numpy as np
 import pandas as pd
 medical_df=pd.read_csv("./csv files/insurance.csv")
 medical_df.info()
@@ -14,6 +13,12 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib
+
+from sklearn.metrics import mean_squared_error
+
+def rmse(y_true, y_pred):
+    return np.sqrt(mean_squared_error(y_true, y_pred))
+
 
 sns.set_style('darkgrid')
 matplotlib.rcParams['font.size']=14
@@ -92,3 +97,68 @@ sns.heatmap(medical_df.corr(numeric_only=True),cmap="Blues",annot=True)
 non_smoker_df=medical_df[medical_df.smoker=="no"]
 
 sns.scatterplot(data=non_smoker_df,x="age",y="charges")
+
+from sklearn.linear_model import LinearRegression
+model=LinearRegression()
+
+inputs= non_smoker_df[["age"]]
+targets=non_smoker_df.charges
+print("Input shape ",inputs.shape)
+print("Targets shape ",targets.shape)
+model.fit(X=inputs,y=targets)
+
+#making predictions
+model.predict(np.array([[23],
+                        [37],
+                        [61]]))
+predictions=model.predict(inputs)
+rmse(targets,predictions) 
+
+##using bmi and age to predict
+inputs,targets=non_smoker_df[["age","bmi"]],non_smoker_df["charges"]
+model=LinearRegression().fit(inputs,targets)
+
+predictions=model.predict(inputs)
+loss=rmse(targets,predictions)
+print("Loss:",loss)
+
+##using children as well
+inputs,targets=non_smoker_df[["age","bmi","children"]],non_smoker_df["charges"]
+model=LinearRegression().fit(inputs,targets)
+
+predictions=model.predict(inputs)
+loss=rmse(targets,predictions)
+print("Loss:",loss)
+
+
+#Using the whole dataset instead of just non smokers with age bmi and children as predictors
+inputs,targets=medical_df[["age","bmi","children"]],medical_df["charges"]
+
+model=LinearRegression().fit(inputs,targets)
+
+predictions=model.predict(inputs)
+loss=rmse(targets,predictions)
+print(loss)
+
+sns.barplot(data=medical_df,x="smoker",y="charges")
+
+smoker_codes={'no':0,'yes':1}
+medical_df["smoker_code"]=medical_df.smoker.map(smoker_codes)
+medical_df.charges.corr(medical_df.smoker_code)
+ 
+ 
+ #looking into the sex column
+sns.barplot(data=medical_df,x="sex",y="charges")
+
+sex_codes={"female":0,"male":1}
+medical_df['sex_code']=medical_df.sex.map(sex_codes)
+medical_df.charges.corr(medical_df.sex_code)
+
+
+inputs,targets=medical_df[["age","bmi","smoker_code","sex_code"]],medical_df["charges"]
+
+model=LinearRegression().fit(inputs,targets)
+predictons=model.predict(inputs)
+loss=rmse(targets,predictions)
+loss
+
