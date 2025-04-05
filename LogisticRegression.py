@@ -50,3 +50,29 @@ sns.scatterplot(raw_df.sample(2000),x="Temp3pm",y='Humidity3pm',hue="RainTomorro
 
 sns.pairplot(raw_df.drop("Date",axis=1).sample(2000),hue="RainTomorrow") 
 
+
+
+
+#When working with massive datasets containing million of rows it's a good idea to work with a sample intially to quickly set up your model training notebook.If you'd like to work with a sample just set the value of use_sample =True
+
+use_sample=False
+sample_fraction=0.1
+
+if use_sample:
+   raw_df=raw_df.sample(frac=sample_fraction).copy()  
+   
+from sklearn.model_selection import train_test_split
+train_val_df,test_=train_test_split(raw_df,test_size=0.2,random_state=42)
+train_df,val_df=train_test_split(train_val_df,test_size=0.25,random_state=42)
+
+
+##however while working with dates its often better idea to separeate the training ,validation ,and test sets with time so that the model is trained o ndata from the past and evaluated on data from the future
+
+sns.countplot(x=pd.to_datetime(raw_df.Date).dt.year,palette="viridis")
+year=pd.to_datetime(raw_df.Date).dt.year
+train_df=raw_df[year<2015]
+val_df=raw_df[year==2015]
+test_df=raw_df[year>2015]
+
+print("train_df.shape:",train_df.shape)
+print("val_df.shape:",val_df.shape)
