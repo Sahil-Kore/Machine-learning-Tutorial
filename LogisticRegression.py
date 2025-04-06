@@ -1,6 +1,6 @@
-import kaggle 
-kaggle.api.authenticate()
-kaggle.api.dataset_download_files("jsphyg/weather-dataset-rattle-package",path="./csv files",unzip=True)
+# import kaggle 
+# kaggle.api.authenticate()
+# kaggle.api.dataset_download_files("jsphyg/weather-dataset-rattle-package",path="./csv files",unzip=True)
 
 
 import pandas as pd
@@ -38,17 +38,18 @@ px.histogram(raw_df,x="RainToday",title="RainTomorrow vs RainToday",color="RainT
 
 sns.histplot(raw_df,x="RainToday",hue="RainTomorrow",multiple="stack")
 
-sns.scatterplot(raw_df.sample(2000),x="MinTemp",y='MaxTemp',hue="RainToday")
+# sns.scatterplot(raw_df.sample(2000),x="MinTemp",y='MaxTemp',hue="RainToday")
 
 #When the temperature does not have much variation then it raintoday is today
 
 
 
 #When temperature is low and humidity is high it rains
-sns.scatterplot(raw_df.sample(2000),x="Temp3pm",y='Humidity3pm',hue="RainTomorrow")
+
+#sns.scatterplot(raw_df.sample(2000),x="Temp3pm",y='Humidity3pm',hue="RainTomorrow")
 
 
-sns.pairplot(raw_df.drop("Date",axis=1).sample(2000),hue="RainTomorrow") 
+# sns.pairplot(raw_df.drop("Date",axis=1).sample(2000),hue="RainTomorrow") 
 
 
 
@@ -76,3 +77,76 @@ test_df=raw_df[year>2015]
 
 print("train_df.shape:",train_df.shape)
 print("val_df.shape:",val_df.shape)
+
+#removing the first(date) and last(target) column
+input_cols=list(train_df.columns)[1:-1]
+input_cols
+
+target_col="RainTomorrow"
+
+train_inputs=train_df[input_cols].copy()
+train_targets=train_df[target_col].copy()
+
+val_inputs=val_df[input_cols].copy()
+val_targets=val_df[target_col].copy()
+
+test_inputs=test_df[input_cols].copy()
+test_targets=test_df[target_col].copy()
+
+import numpy as np
+
+#separating numeric and categorical columns
+numeric_cols=train_inputs.select_dtypes(include=np.number).columns.to_list()
+
+categorical_cols=train_inputs.select_dtypes('object').columns.to_list()
+
+train_inputs[numeric_cols].describe()
+
+train_inputs[categorical_cols].nunique()
+
+
+
+#Imputation:-The process of filling missing values
+
+#There are several techniques for impputation but we'll use the most basic one replacing missing values with the average value inthe column using the SimpleImputer class from sklearn.impute
+
+
+from sklearn.impute import SimpleImputer
+
+imputer=SimpleImputer(strategy="mean")
+
+
+#Before imputing lets check the no. of missing values in each numeric column
+
+train_inputs[numeric_cols].isna().sum()
+
+imputer.fit(raw_df[numeric_cols])
+
+imputer.statistics_
+
+train_inputs[numeric_cols]=imputer.transform(train_inputs[numeric_cols])
+
+val_inputs[numeric_cols]=imputer.transform(val_inputs[numeric_cols])
+test_inputs[numeric_cols]=imputer.transform(test_inputs[numeric_cols])
+
+train_inputs[numeric_cols].isna().sum()
+
+
+
+#Another good practice is to scale the numeric input features to small range of eg (0,1) or (-1,1).Scaling numeric features ensures that no particular feature has a disproportionate impact on the models loss.Optimization algorithms also work better in pratice with smaller numbers
+
+#using minmax scaler form sklearn to scale value to the range of (0,1)
+
+from sklearn.preprocessing import MinMaxScaler
+MinMaxScaler?
+
+scaler=MinMaxScaler()
+scaler.fit(raw_df[numeric_cols])
+scaler.data_min_
+
+train_inputs[numeric_cols]=scaler.transform(train_df[numeric_cols])
+
+val_inputs[numeric_cols]=scaler.transform(val_inputs[numeric_cols])
+
+test_inputs[numeric_cols]=scaler.transform(test_inputs[numeric_cols])
+
