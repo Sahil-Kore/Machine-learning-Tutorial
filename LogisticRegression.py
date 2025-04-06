@@ -150,3 +150,22 @@ val_inputs[numeric_cols]=scaler.transform(val_inputs[numeric_cols])
 
 test_inputs[numeric_cols]=scaler.transform(test_inputs[numeric_cols])
 
+
+#Encoding Categorical data 
+from sklearn.preprocessing import OneHotEncoder
+encoder=OneHotEncoder(sparse_output=False,handle_unknown='ignore')
+
+
+encoder.fit(raw_df[categorical_cols])
+encoder.categories_
+encoded_cols=list(encoder.get_feature_names_out())
+encoded_cols
+
+
+train_inputs[encoded_cols]=encoder.transform(train_inputs[categorical_cols])
+
+val_inputs[encoded_cols]=encoder.transform(val_inputs[categorical_cols])
+
+test_inputs[encoded_cols]=encoder.transform(test_inputs[categorical_cols])
+
+print(train_inputs.columns)
