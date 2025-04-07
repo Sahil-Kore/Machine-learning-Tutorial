@@ -255,7 +255,7 @@ confusion_matrix(train_targets,train_preds,normalize="true")
 def predict_and_plot(inputs,targets,name=''):
    preds=model.predict(inputs)
    accuracy =accuracy_score(targets,preds)
-   print("Accuracy of th model is ",accuracy)
+   print(f"Accuracy of the model is {accuracy*100}")
    cf=confusion_matrix(targets,preds,normalize='true')
    plt.figure()
    sns.heatmap(cf,annot=True)
@@ -271,3 +271,53 @@ val_preds=predict_and_plot(X_val,val_targets,"Validation")
 
 test_preds=predict_and_plot(X_test,test_targets,"Test")
 
+#Comparing the model against dumb models
+
+def random_guess(inputs):
+   return np.random.choice(["No","Yes"],len(inputs))
+
+def all_no(inputs):
+   return np.full(len(inputs),"No")
+
+accuracy_score(test_targets,random_guess(X_test))
+accuracy_score(test_targets,all_no(X_test))
+
+#Our model is better than both of these
+
+new_input=train_df.iloc[np.random.randint(0,len(train_df))]
+new_input_df=pd.DataFrame([new_input])
+
+
+#Transforming the new input according to how the input data for model training was transformed
+new_input_df[numeric_cols]=imputer.transform(new_input_df[numeric_cols])
+new_input_df[numeric_cols]=scaler.transform(new_input_df[numeric_cols])
+new_input_df[encoded_cols]=encoder.transform(new_input_df[categorical_cols])
+
+X_new_input=new_input_df[numeric_cols+encoded_cols]
+X_new_input
+
+
+#making a prediction
+prediction = model.predict(X_new_input)
+prediction
+
+prob=model.predict_proba(X_new_input)
+prob
+
+#Creating a helper function to predict new inputs
+
+def predict_input(single_input):
+   input_df=pd.DataFrame([single_input])
+   input_df[numeric_cols]=imputer.transform(input_df[numeric_cols])
+   input_df[numeric_cols]=scaler.transform(input_df[numeric_cols])
+   input_df[encoded_cols]=encoder.transform(input_df[categorical_cols])
+   X_input=input_df[numeric_cols+encoded_cols]
+   pred=model.predict(X_input)[0]
+   prob=model.predict_proba(X_input)[0][list(model.classes_).index(pred)]
+   return pred,prob
+
+
+new_input=train_df.iloc[np.random.randint(0,len(train_df))]
+new_input
+prediction,prob=predict_input(new_input)
+prediction,prob
