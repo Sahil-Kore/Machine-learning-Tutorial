@@ -112,9 +112,7 @@ train_inputs[categorical_cols].nunique()
 
 
 from sklearn.impute import SimpleImputer
-
 imputer=SimpleImputer(strategy="mean")
-
 
 #Before imputing lets check the no. of missing values in each numeric column
 
@@ -125,7 +123,6 @@ imputer.fit(raw_df[numeric_cols])
 imputer.statistics_
 
 train_inputs[numeric_cols]=imputer.transform(train_inputs[numeric_cols])
-
 val_inputs[numeric_cols]=imputer.transform(val_inputs[numeric_cols])
 test_inputs[numeric_cols]=imputer.transform(test_inputs[numeric_cols])
 
@@ -144,7 +141,8 @@ scaler=MinMaxScaler()
 scaler.fit(raw_df[numeric_cols])
 scaler.data_min_
 
-train_inputs[numeric_cols]=scaler.transform(train_df[numeric_cols])
+train_inputs[numeric_cols]=scaler.transform(train_inputs[numeric_cols])
+
 
 val_inputs[numeric_cols]=scaler.transform(val_inputs[numeric_cols])
 
@@ -169,3 +167,77 @@ val_inputs[encoded_cols]=encoder.transform(val_inputs[categorical_cols])
 test_inputs[encoded_cols]=encoder.transform(test_inputs[categorical_cols])
 
 print(train_inputs.columns)
+
+
+
+#Saving the processed data to the disk so that whenever needed we dont have to repeat the preprocessing steps all again
+#Parquet format is a fast and efficient format for saving and loading pandas dataframe
+ 
+#Creating a directory for the data 
+
+import os
+# os.getcwd()
+# os.mkdir("LogisticRegressionData")
+
+
+train_inputs.to_parquet('LogisticRegressionData/train_inputs.parquet')
+
+val_inputs.to_parquet('LogisticRegressionData/val_inputs.parquet')
+
+test_inputs.to_parquet('LogisticRegressionData/test_inputs.parquet')
+
+pd.DataFrame(train_targets).to_parquet("LogisticRegressionData/train_targets.parquet")
+
+
+pd.DataFrame(val_targets).to_parquet("LogisticRegressionData/val_targets.parquet")
+
+
+pd.DataFrame(test_targets).to_parquet("LogisticRegressionData/test_targets.parquet")
+
+
+#Reading from the parquet
+
+train_inputs=pd.read_parquet("LogisticRegressionData/train_inputs.parquet")
+
+val_inputs=pd.read_parquet("LogisticRegressionData/val_inputs.parquet")
+
+test_inputs=pd.read_parquet("LogisticRegressionData/test_inputs.parquet")
+
+train_targets=pd.read_parquet("LogisticRegressionData/train_targets.parquet")
+
+val_targets=pd.read_parquet("LogisticRegressionData/val_targets.parquet")
+
+test_targets=pd.read_parquet("LogisticRegressionData/test_targets.parquet")
+
+train_inputs.isna().sum()
+from sklearn.linear_model import LogisticRegression
+model=LogisticRegression(solver="liblinear")
+model.fit(train_inputs[numeric_cols+encoded_cols],train_targets)
+
+print(numeric_cols+encoded_cols)
+print(model.coef_.tolist())
+
+weigth_df=pd.DataFrame({
+   "feature":(numeric_cols+encoded_cols+["intercept"]),
+   "weight":np.append(model.coef_.tolist()[0],model.intercept_)
+}
+)
+import matplotlib.pyplot as plt
+plt.figure(figsize=(10,50))
+
+
+#Plotting the top 10 values with highest weights
+
+sns.barplot(data=weigth_df.sort_values("weight",ascending=False).head(10),x="weight",y="feature",hue="feature",palette="muted",width=1)
+
+X_train=train_inputs[numeric_cols+encoded_cols]
+X_val=val_inputs[numeric_cols+encoded_cols]
+X_test=test_inputs[numeric_cols+encoded_cols]
+
+train_preds=model.predict(X_train)
+train_preds
+
+#We can output probabilistic predictions using predict_proba
+
+train_probs=model.predict_proba(X_train)
+train_probs
