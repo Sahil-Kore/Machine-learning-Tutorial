@@ -321,3 +321,23 @@ new_input=train_df.iloc[np.random.randint(0,len(train_df))]
 new_input
 prediction,prob=predict_input(new_input)
 prediction,prob
+
+#Saving and loading trained models
+import joblib
+
+#Creating a dictionary containing all the rquired objects
+aus_rain={
+   'model':model,
+   'imputer':imputer,
+   'scaler':scaler,
+   'encoder':encoder,
+   'input_cols':input_cols,
+   'target_cols':numeric_cols,
+   'categorical_cols':categorical_cols,
+   'encoded_cols':encoded_cols
+}
+os.getcwd()
+joblib.dump(aus_rain,"aus_rain.joblib")
+
+aus_rain2=joblib.load("aus_rain.joblib")
+aus_rain2
