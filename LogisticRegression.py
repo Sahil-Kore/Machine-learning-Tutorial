@@ -241,3 +241,33 @@ train_preds
 
 train_probs=model.predict_proba(X_train)
 train_probs
+
+from sklearn.metrics import accuracy_score
+accuracy_score(train_targets,train_preds)
+
+from sklearn.metrics import confusion_matrix
+confusion_matrix(train_targets,train_preds,normalize="true")
+
+#Has a lot of false negatives therefore there is a high chance that when model predicts it is not going to rain it might rain
+
+#Could be due to the fact that the original data has a lot of "Yes" values
+
+def predict_and_plot(inputs,targets,name=''):
+   preds=model.predict(inputs)
+   accuracy =accuracy_score(targets,preds)
+   print("Accuracy of th model is ",accuracy)
+   cf=confusion_matrix(targets,preds,normalize='true')
+   plt.figure()
+   sns.heatmap(cf,annot=True)
+   plt.xlabel("Prediction")
+   plt.ylabel("Target")
+   plt.title(f"{name} Confusion matrix")
+   return preds
+
+
+train_preds=predict_and_plot(X_train,train_targets,"Training")
+
+val_preds=predict_and_plot(X_val,val_targets,"Validation")
+
+test_preds=predict_and_plot(X_test,test_targets,"Test")
+
