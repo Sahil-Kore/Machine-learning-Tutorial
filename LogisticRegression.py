@@ -341,3 +341,6 @@ joblib.dump(aus_rain,"aus_rain.joblib")
 
 aus_rain2=joblib.load("aus_rain.joblib")
 aus_rain2
+
+test_preds2=aus_rain2['model'].predict(X_test)
+accuracy_score(test_targets,test_preds2)
